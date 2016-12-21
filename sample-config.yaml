@@ -1,0 +1,10 @@
+Netatmo:
+    Auth:
+        ClientId: test
+        ClientSecret: test
+        Username: test@email.com
+        Password: test
+    Contact:
+        BaseUri: https://api.netatmo.com/
+        AuthEndPoint: oauth2/token
+        DataEndPoint: api/getstationsdata

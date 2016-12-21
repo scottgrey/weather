@@ -1,0 +1,104 @@
+{
+  "body": {
+    "devices": [
+      {
+        "_id": "ab:cd:ef:12:34:56",
+        "cipher_id": "enc:12345",
+        "last_status_store": 1478895978,
+        "modules": [
+          {
+            "_id": "ab:cd:ef:12:34:57",
+            "type": "NAModule1",
+            "last_message": 1478895972,
+            "last_seen": 1478895940,
+            "dashboard_data": {
+              "time_utc": 1478895940,
+              "Temperature": 17.9,
+              "temp_trend": "stable",
+              "Humidity": 48,
+              "date_max_temp": 1478895940,
+              "date_min_temp": 1478861076,
+              "min_temp": 3.2,
+              "max_temp": 17.9
+            },
+            "data_type": [ "Temperature", "Humidity" ],
+            "module_name": "Outdoor",
+            "last_setup": 1468006673,
+            "battery_vp": 5104,
+            "battery_percent": 63,
+            "rf_status": 69,
+            "firmware": 44
+          },
+          {
+            "_id": "ab:cd:ef:12:34:58",
+            "type": "NAModule3",
+            "last_message": 1478895972,
+            "last_seen": 1478895972,
+            "dashboard_data": {
+              "time_utc": 1478895959,
+              "Rain": 0,
+              "sum_rain_24": 0,
+              "sum_rain_1": 0
+            },
+            "data_type": [ "Rain" ],
+            "module_name": "Rain",
+            "last_setup": 1468010170,
+            "battery_vp": 5852,
+            "battery_percent": 94,
+            "rf_status": 72,
+            "firmware": 8
+          }
+        ],
+        "place": {
+          "altitude": 311.39500152393,
+          "city": "Anywhere",
+          "country": "US",
+          "timezone": "America/Chicago",
+          "location": [ 13.866866722784, -29.391276840152 ]
+        },
+        "station_name": "Home",
+        "type": "NAMain",
+        "dashboard_data": {
+          "AbsolutePressure": 994.2,
+          "time_utc": 1478895967,
+          "Noise": 35,
+          "Temperature": 19.6,
+          "temp_trend": "stable",
+          "Humidity": 45,
+          "Pressure": 1016.1,
+          "pressure_trend": "down",
+          "CO2": 488,
+          "date_max_temp": 1478844137,
+          "date_min_temp": 1478865657,
+          "min_temp": 18.5,
+          "max_temp": 20.7
+        },
+        "data_type": [
+          "Temperature", "CO2", "Humidity", "Noise", "Pressure"
+        ],
+        "co2_calibrating": false,
+        "date_setup": 1468006672,
+        "last_setup": 1468006672,
+        "module_name": "Indoor",
+        "firmware": 124,
+        "last_upgrade": 1468011637,
+        "wifi_status": 57
+      }
+    ],
+    "user": {
+      "mail": "test@email.com",
+      "administrative": {
+        "country": "US",
+        "reg_locale": "en-US",
+        "lang": "en-US",
+        "unit": 1,
+        "windunit": 1,
+        "pressureunit": 1,
+        "feel_like_algo": 1
+      }
+    }
+  },
+  "status": "ok",
+  "time_exec": 0.016562938690186,
+  "time_server": 1478896492
+}
