@@ -1,5 +1,8 @@
 source https://www.nuget.org/api/v2/
+framework >= net45
+
 nuget FAKE
 nuget FSharp.Configuration
 nuget FSharp.Data
-nuget InfluxDB.Net-Main
+nuget Newtonsoft.Json
+
