@@ -322,7 +322,7 @@ let main argv =
 
     let cts = new System.Threading.CancellationTokenSource()
     Async.Start(loop (), cts.Token)
-    Console.ReadKey() |> ignore
+    Console.ReadLine() |> ignore
     printfn "Cancelling..."
     cts.Cancel()
     0 // return an integer exit code
