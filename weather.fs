@@ -1,73 +1,16 @@
 open System
+open System.Net
 open FSharp.Configuration
 open FSharp.Data
+open InfluxDB.FSharp
 
-type Config = YamlConfig<"./sample-config.yaml", ReadOnly=true>
+[<AutoOpen>]
+module WeatherConfig = 
 
-type Auth = JsonProvider<"./data/auth.json">
+    type Config = YamlConfig<"./sample-config.yaml", ReadOnly=true>
 
-type NetatmoWeather = JsonProvider<"./data/weather.json">
+    type Auth = JsonProvider<"./data/auth.json">
 
-type IndoorWeather = {
-    stationName : string;
-    timeUtc : int;
-    lastStatusStore : int;
-    dateSetup : int;
-    lastSetup : int;
-    lastUpgrade : int;
-    co2Calibrating : bool;
-    wifiStatus : int;
-    firmware : int;
-    temperature : float;
-    tempTrend : string;
-    humidity : int;
-    pressure : decimal;
-    pressureTrend : string;
-    absolutePressure : decimal;
-    noise : int;
-    co2 : int;
-    maxTemp : float;
-    dateMaxTemp : int;
-    minTemp : float;
-    dateMinTemp : int;
-}
-
-type OutdoorWeather = {
-    moduleName : string;
-    batteryPercent : int;
-    batteryVp : int;
-    measurementTime : int;
-    lastMessage : int;
-    lastSeen : int;
-    lastSetup : int;
-    rfStatus : int;
-    firmware : int;
-    temperature : float;
-    tempTrend : string;
-    humidity : int;
-    maxTemp : float;
-    dateMaxTemp : int;
-    minTemp : float;
-    dateMinTemp : int;
-}
-
-type RainWeather = {
-    moduleName : string;
-    batteryPercent : int;
-    batteryVp : int;
-    measurementTime : int;
-    lastMessage : int;
-    lastSeen : int;
-    lastSetup : int;
-    rfStatus : int;
-    firmware : int;
-    rain : float;
-    sumRain1 : float;
-    sumRain24 : float;
-}
-
-
-module weather =
     let config = Config()
     let configFilePath = "./config.yaml"
 
@@ -84,6 +27,69 @@ module weather =
                     ("password", config.Netatmo.Auth.Password);
                     ("scope", "read_station")]
             )
+
+[<AutoOpen>]
+module weather =
+    type NetatmoWeather = JsonProvider<"./data/weather.json">
+
+    type IndoorWeather = {
+        stationName : string;
+        measurementTime : DateTime;
+        lastStatusStore : int;
+        dateSetup : int;
+        lastSetup : int;
+        lastUpgrade : int;
+        co2Calibrating : bool;
+        wifiStatus : int;
+        firmware : int;
+        temperature : float;
+        tempTrend : string;
+        humidity : int;
+        pressure : decimal;
+        pressureTrend : string;
+        absolutePressure : decimal;
+        noise : int;
+        co2 : int;
+        maxTemp : float;
+        dateMaxTemp : int;
+        minTemp : float;
+        dateMinTemp : int;
+    }
+
+    type OutdoorWeather = {
+        moduleName : string;
+        batteryPercent : int;
+        batteryVp : int;
+        measurementTime : DateTime;
+        lastMessage : int;
+        lastSeen : int;
+        lastSetup : int;
+        rfStatus : int;
+        firmware : int;
+        temperature : float;
+        tempTrend : string;
+        humidity : int;
+        maxTemp : float;
+        dateMaxTemp : int;
+        minTemp : float;
+        dateMinTemp : int;
+    }
+
+    type RainWeather = {
+        moduleName : string;
+        batteryPercent : int;
+        batteryVp : int;
+        measurementTime : DateTime;
+        lastMessage : int;
+        lastSeen : int;
+        lastSetup : int;
+        rfStatus : int;
+        firmware : int;
+        rain : float;
+        sumRain1 : float;
+        sumRain24 : float;
+    }
+    
     let weatherResponse accessToken = 
         Http.RequestString 
             (config.Netatmo.Contact.BaseUri.ToString() + config.Netatmo.Contact.DataEndPoint, 
@@ -108,7 +114,7 @@ module weather =
         let moduleName = rmd.ModuleName
         let batteryPercent = rmd.BatteryPercent
         let batteryVp = rmd.BatteryVp
-        let measurementTime = rmd.DashboardData.TimeUtc
+        let measurementTime = toDateTime(rmd.DashboardData.TimeUtc)
         let lastMessage = rmd.LastMessage
         let lastSeen = rmd.LastSeen
         let lastSetup = rmd.LastSetup
@@ -148,7 +154,7 @@ module weather =
         let moduleName = omd.ModuleName
         let batteryPercent = omd.BatteryPercent
         let batteryVp = omd.BatteryVp
-        let measurementTime = omd.DashboardData.TimeUtc
+        let measurementTime = toDateTime(omd.DashboardData.TimeUtc)
         let lastMessage = omd.LastMessage
         let lastSeen = omd.LastSeen
         let lastSetup = omd.LastSetup
@@ -211,7 +217,7 @@ module weather =
 
     let getDevice (dc : NetatmoWeather.Devicis) =
         let stationName = dc.StationName
-        let timeUtc = dc.DashboardData.TimeUtc
+        let measurementTime = toDateTime(dc.DashboardData.TimeUtc)
         let lastStatusStore = dc.LastStatusStore
         let dateSetup = dc.DateSetup
         let lastSetup = dc.LastSetup
@@ -231,124 +237,9 @@ module weather =
         let dateMaxTemp = dc.DashboardData.DateMaxTemp
         let minTemp = (ctof (float(dc.DashboardData.MinTemp)))
         let dateMinTemp = dc.DashboardData.DateMinTemp
-
-        (*printfn "Device: %s" stationName
-        printfn ""
-        printfn "Indoor measurement time(UTC): %s" (toDateTime(timeUtc).ToString())
-        printfn "Indoor measurement time(Local): %s" (toDateTimeLocal(timeUtc).ToString())
-        printfn "Indoor last status store time(UTC): %s" (toDateTime(lastStatusStore).ToString())
-        printfn "Indoor last status store time(Local): %s" (toDateTimeLocal(lastStatusStore).ToString())
-        printfn "Indoor setup time(UTC): %s" (toDateTime(dateSetup).ToString())
-        printfn "Indoor setup time(Local): %s" (toDateTimeLocal(dateSetup).ToString())
-        printfn "Indoor last setup time(UTC): %s" (toDateTime(lastSetup).ToString())
-        printfn "Indoor last setup time(Local): %s" (toDateTimeLocal(lastSetup).ToString())
-        printfn "Indoor last upgrade time(UTC): %s" (toDateTime(lastUpgrade).ToString())
-        printfn "Indoor last upgrade time(Local): %s" (toDateTimeLocal(lastUpgrade).ToString())
-        printfn "CO2 Calibrating: %b" dc.Co2Calibrating
-        printfn "Indoor wifi status: %i" dc.WifiStatus
-        printfn "Indoor firmware: %i" dc.Firmware
-        printfn "Indoor Temp: %.2f" (ctof (float(dc.DashboardData.Temperature)))
-        printfn "Indoor Temp trend: %s" dc.DashboardData.TempTrend
-        printfn "Indoor Humidity: %i" dc.DashboardData.Humidity
-        printfn "Pressure: %M" dc.DashboardData.Pressure
-        printfn "Pressure trend: %s" dc.DashboardData.PressureTrend
-        printfn "Absolute Presssure: %M" dc.DashboardData.AbsolutePressure
-        printfn "Noise: %i" dc.DashboardData.Noise
-        printfn "CO2: %i" dc.DashboardData.Co2
-        printfn "Max Indoor Temp: %.2f" (ctof (float(dc.DashboardData.MaxTemp)))
-        printfn "DateTime of Max Indoor Temp (UTC): %s" (toDateTime(dc.DashboardData.DateMaxTemp).ToString())
-        printfn "DateTime of Max Indoor Temp (Local): %s" (toDateTimeLocal(dc.DashboardData.DateMaxTemp).ToString())
-        printfn "Min Indoor Temp: %.2f" (ctof (float(dc.DashboardData.MinTemp)))
-        printfn "DateTime of Min Indoor Temp (UTC): %s" (toDateTime(dc.DashboardData.DateMinTemp).ToString())
-        printfn "DateTime of Min Indoor Temp (Local): %s" (toDateTimeLocal(dc.DashboardData.DateMinTemp).ToString())
-*)
-        //for m in dc.Modules do
-        //    let mn = m.ModuleName
-           (* printfn ""
-            printfn "Module Name: %s" mn
-            printfn "%s Battery Status: %i" mn m.BatteryPercent
-            printfn "%s Battery volt: %i" mn m.BatteryVp
-            printfn "%s measurement time(UTC): %s" mn (toDateTime(m.DashboardData.TimeUtc).ToString())
-            printfn "%s measurement time(Local): %s" mn (toDateTimeLocal(m.DashboardData.TimeUtc).ToString())
-            printfn "%s last message time(UTC): %s" mn (toDateTime(m.LastMessage).ToString())
-            printfn "%s last message time(Local): %s" mn (toDateTimeLocal(m.LastMessage).ToString())
-            printfn "%s last seen time(UTC): %s" mn (toDateTime(m.LastSeen).ToString())
-            printfn "%s last seen time(Local): %s" mn (toDateTimeLocal(m.LastSeen).ToString())
-            printfn "%s last setup time(UTC): %s" mn (toDateTime(m.LastSetup).ToString())
-            printfn "%s last setup time(Local): %s" mn (toDateTimeLocal(m.LastSetup).ToString())
-            printfn "%s rf status: %i" mn m.RfStatus
-            printfn "%s firmware: %i" mn m.Firmware
-            match mn with
-                | "Outdoor" -> 
-                    let ot = m.DashboardData.Temperature
-                        
-                    match ot with
-                    | Some t -> 
-                        printfn "%s Temp: %.2f" mn (ctof (float(t)))
-                    | None -> ()
-                    
-                    let tt = m.DashboardData.TempTrend
-                        
-                    match tt with
-                    | Some t -> printfn "%s Temp trend: %s" mn t
-                    | None -> ()
-
-                    let hy = m.DashboardData.Humidity
-
-                    match hy with
-                    | Some h -> printfn "%s Humidity: %i" mn h
-                    | None -> ()
-
-                    let dmaxt = m.DashboardData.DateMaxTemp
-                    let maxt = m.DashboardData.MaxTemp
-
-                    match maxt with
-                    | Some t -> printfn "Max %s Temp: %.2f" mn (ctof (float(t)))
-                    | None -> ()
-
-                    match dmaxt with
-                    | Some t -> 
-                        printfn "DateTime of Max %s Temp (UTC): %s" mn (toDateTime(t).ToString())
-                        printfn "DateTime of Max %s Temp (Local): %s" mn (toDateTimeLocal(t).ToString())
-                    | None -> ()
-
-                    let dmint = m.DashboardData.DateMinTemp
-                    let mint = m.DashboardData.MinTemp
-
-                    match mint with
-                    | Some t -> printfn "Min %s Temp: %.2f" mn (ctof (float(t)))
-                    | None -> ()
-
-                    match dmint with
-                    | Some t -> 
-                        printfn "DateTime of Min %s Temp (UTC): %s" mn (toDateTime(t).ToString())
-                        printfn "DateTime of Min %s Temp (Local): %s" mn (toDateTimeLocal(t).ToString())
-                    | None -> ()
-
-                | "Rain" -> 
-                    let rn = m.DashboardData.Rain
-
-                    match rn with
-                    | Some r -> printfn "%s since last measurement: %.4f" mn (mmtoin (float(r)))
-                    | None -> ()
-                        
-                    let rn1 = m.DashboardData.SumRain1
-
-                    match rn1 with
-                    | Some r -> printfn "%s in last hour: %.4f" mn (mmtoin (float(r)))
-                    | None -> ()
-
-                    let rn24 = m.DashboardData.SumRain24
-
-                    match rn24 with
-                    | Some r -> printfn "%s in last 24 hours: %.4f" mn (mmtoin (float(r)))
-                    | None -> ()
-
-                | _ -> ()
-            printfn ""*)
         {
             stationName = stationName
-            timeUtc = timeUtc
+            measurementTime = measurementTime
             lastStatusStore = lastStatusStore
             dateSetup = dateSetup
             lastSetup = lastSetup
@@ -370,11 +261,15 @@ module weather =
             dateMinTemp = dateMinTemp
         }
 
- 
 
-    [<EntryPoint>]
-    let main argv =
-        let auth = authResponse
+
+[<EntryPoint>]
+let main argv =
+    
+    let influxClient = Client("localhost")
+
+    let rec loop () = async {
+        let auth = authResponse 
         let ar = Auth.Parse(auth)
         let accessToken = ar.AccessToken
 
@@ -414,6 +309,20 @@ module weather =
                     printfn "%A" rain
                 | _ -> printfn ""
 
+        let dbs = influxClient.ShowDatabases() |> Async.RunSynchronously
+        printfn "%A" dbs
+        printfn ""
+        printfn "sleeping for 60 seconds...."
+        do! Async.Sleep(60000)
+        printfn ""
+        printfn "done sleeping!"
+        printfn ""
+        return! loop()
+        }
 
-        let console = Console.ReadLine()
-        0 // return an integer exit code
+    let cts = new System.Threading.CancellationTokenSource()
+    Async.Start(loop (), cts.Token)
+    Console.ReadKey() |> ignore
+    printfn "Cancelling..."
+    cts.Cancel()
+    0 // return an integer exit code
