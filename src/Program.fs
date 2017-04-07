@@ -7,7 +7,7 @@ open FSharp.Data
 open InfluxDB.FSharp
 
 
-module Main 
+module Main =
 
     [<EntryPoint>]
     let main argv =
