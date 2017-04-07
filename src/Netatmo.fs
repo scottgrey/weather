@@ -1,96 +1,14 @@
+namespace Weather
+
 open System
 open System.Net
 open FSharp.Configuration
 open FSharp.Data
-open InfluxDB.FSharp
 
 [<AutoOpen>]
-module WeatherConfig = 
+module Netatmo =
 
-    type Config = YamlConfig<"./sample-config.yaml", ReadOnly=true>
-
-    type Auth = JsonProvider<"./data/auth.json">
-
-    let config = Config()
-    let configFilePath = "./config.yaml"
-
-    config.Load(configFilePath)
-
-    let authResponse = 
-        Http.RequestString 
-            (config.Netatmo.Contact.BaseUri.ToString() + config.Netatmo.Contact.AuthEndPoint, 
-                body = FormValues [
-                    ("grant_type", "password");
-                    ("client_id", config.Netatmo.Auth.ClientId);
-                    ("client_secret", config.Netatmo.Auth.ClientSecret);
-                    ("username", config.Netatmo.Auth.Username);
-                    ("password", config.Netatmo.Auth.Password);
-                    ("scope", "read_station")]
-            )
-
-[<AutoOpen>]
-module weather =
-    type NetatmoWeather = JsonProvider<"./data/weather.json">
-
-    type IndoorWeather = {
-        stationName : string;
-        measurementTime : DateTime;
-        lastStatusStore : int;
-        dateSetup : int;
-        lastSetup : int;
-        lastUpgrade : int;
-        co2Calibrating : bool;
-        wifiStatus : int;
-        firmware : int;
-        temperature : float;
-        tempTrend : string;
-        humidity : int;
-        pressure : decimal;
-        pressureTrend : string;
-        absolutePressure : decimal;
-        noise : int;
-        co2 : int;
-        maxTemp : float;
-        dateMaxTemp : int;
-        minTemp : float;
-        dateMinTemp : int;
-    }
-
-    type OutdoorWeather = {
-        moduleName : string;
-        batteryPercent : int;
-        batteryVp : int;
-        measurementTime : DateTime;
-        lastMessage : int;
-        lastSeen : int;
-        lastSetup : int;
-        rfStatus : int;
-        firmware : int;
-        temperature : float;
-        tempTrend : string;
-        humidity : int;
-        maxTemp : float;
-        dateMaxTemp : int;
-        minTemp : float;
-        dateMinTemp : int;
-    }
-
-    type RainWeather = {
-        moduleName : string;
-        batteryPercent : int;
-        batteryVp : int;
-        measurementTime : DateTime;
-        lastMessage : int;
-        lastSeen : int;
-        lastSetup : int;
-        rfStatus : int;
-        firmware : int;
-        rain : float;
-        sumRain1 : float;
-        sumRain24 : float;
-    }
-    
-    let weatherResponse accessToken = 
+    let weatherResponse accessToken (config: Config) = 
         Http.RequestString 
             (config.Netatmo.Contact.BaseUri.ToString() + config.Netatmo.Contact.DataEndPoint, 
                 body = FormValues [
@@ -260,69 +178,3 @@ module weather =
             minTemp = minTemp
             dateMinTemp = dateMinTemp
         }
-
-
-
-[<EntryPoint>]
-let main argv =
-    
-    let influxClient = Client("localhost")
-
-    let rec loop () = async {
-        let auth = authResponse 
-        let ar = Auth.Parse(auth)
-        let accessToken = ar.AccessToken
-
-        let weather = weatherResponse accessToken
-
-        //printfn "auth: %s\n" auth
-
-        //printfn "weather: %s\n" weather
-
-        let w = NetatmoWeather.Parse(weather)
-
-        printfn "Weather Status: %s" w.Status
-        printfn "Time Executing: %f" w.TimeExec
-        printfn "Time on Server(UTC): %s" (toDateTime(w.TimeServer).ToString())
-        printfn "Time on Server(Local): %s" (toDateTimeLocal(w.TimeServer).ToString())
-
-        let b = w.Body
-        let u = b.User
-        printfn "User: %s\n" u.Mail
-
-        let d = b.Devices
-
-        for dc in d do
-            let indoor = getDevice dc 
-            printfn "%A" (indoor.GetHashCode())
-            printfn "%A" indoor
-
-            for m in dc.Modules do
-                match m.ModuleName with
-                | "Outdoor" -> 
-                    let outdoor = getOutdoorModule m
-                    printfn "%A" (outdoor.GetHashCode())
-                    printfn "%A" outdoor
-                | "Rain" ->
-                    let rain = getRainModule m
-                    printfn "%A" (rain.GetHashCode())
-                    printfn "%A" rain
-                | _ -> printfn ""
-
-        let dbs = influxClient.ShowDatabases() |> Async.RunSynchronously
-        printfn "%A" dbs
-        printfn ""
-        printfn "sleeping for 60 seconds...."
-        do! Async.Sleep(60000)
-        printfn ""
-        printfn "done sleeping!"
-        printfn ""
-        return! loop()
-        }
-
-    let cts = new System.Threading.CancellationTokenSource()
-    Async.Start(loop (), cts.Token)
-    Console.ReadLine() |> ignore
-    printfn "Cancelling..."
-    cts.Cancel()
-    0 // return an integer exit code

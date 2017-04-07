@@ -1,13 +1,17 @@
-#load @"./paket-files/include-scripts/net46/include.influxdb.net-main.fsx"
+#load @"./paket-files/include-scripts/net45/include.main.group.fsx"
+#r "./manualpackages/influxdb-fsharp/lib/InfluxDB.FSharp.dll"
+#load @"./src/Influx.fs"
 
 open System
-open InfluxDB.Net
+open InfluxDB.FSharp
+open Weather.Influx
 
-let client = new InfluxDb("http://localhost:8086", "root", "root")
+let client = Client("localhost")
 
-let databases = client.ShowDatabasesAsync()
-let dbResult = databases.Result
-dbResult
+
+let databases = client.ShowDatabases() |> Async.RunSynchronously |> notFail
+
+databases
 
 //let pong = client.PingAsync()
 //let pongResult = pong.Result
