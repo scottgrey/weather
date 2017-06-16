@@ -36,9 +36,9 @@
             "last_seen": 1478895972,
             "dashboard_data": {
               "time_utc": 1478895959,
-              "Rain": 0,
-              "sum_rain_24": 0,
-              "sum_rain_1": 0
+              "Rain": 0.01,
+              "sum_rain_24": 0.01,
+              "sum_rain_1": 0.01
             },
             "data_type": [ "Rain" ],
             "module_name": "Rain",

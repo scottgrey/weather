@@ -5,7 +5,7 @@ open System.Net
 open FSharp.Configuration
 open FSharp.Data
 
-type Config = YamlConfig<"../sample-config.yaml", ReadOnly=true>
+type Config = YamlConfig<FilePath="../sample-config.yaml", ReadOnly=true>
 
 type Auth = JsonProvider<"../data/auth.json">
 

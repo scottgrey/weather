@@ -28,7 +28,7 @@ module Main =
 
             //printfn "auth: %s\n" auth
 
-            //printfn "weather: %s\n" weather
+            printfn "weather: %s\n" weather
 
             let w = NetatmoWeather.Parse(weather)
 
